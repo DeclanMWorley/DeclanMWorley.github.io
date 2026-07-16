@@ -1,0 +1,264 @@
+---
+import '@fontsource/medievalsharp';
+import '@fontsource/pixelify-sans/400.css';
+import '@fontsource/pixelify-sans/600.css';
+import '@fontsource/cinzel/600.css';
+import '@fontsource-variable/geist';
+import '@fontsource/jetbrains-mono/400.css';
+import '../styles/global.css';
+import { SITE } from '../consts';
+
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const { title, description = SITE.description } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const NAV = [
+	{ label: 'About', href: `${base}/#about` },
+	{ label: 'Skills', href: `${base}/#skills` },
+	{ label: 'Experience', href: `${base}/#experience` },
+	{ label: 'Projects', href: `${base}/#projects` },
+	{ label: 'Writing', href: `${base}/#writing` },
+	{ label: 'Contact', href: `${base}/#contact` },
+];
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<title>{title}</title>
+	</head>
+	<body>
+		<header class="site-header">
+			<nav class="container nav">
+				<a class="brand" href={`${base}/`}>
+					<svg class="brand-shield" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+						<path
+							d="M12 1.5 21 5v6.2c0 5.3-3.7 9.4-9 11.3-5.3-1.9-9-6-9-11.3V5l9-3.5Z"
+							fill="var(--panel)"
+							stroke="var(--gold)"
+							stroke-width="1.4"
+						/>
+						<path d="M7.5 12.2 10.6 15l5.9-6" fill="none" stroke="#ffd75e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+					<span>{SITE.name}</span>
+				</a>
+				<div class="nav-links">
+					{NAV.map((item) => <a href={item.href}>{item.label}</a>)}
+					<a class="nav-gh" href={SITE.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+						<svg viewBox="0 0 16 16" width="17" height="17" fill="currentColor" aria-hidden="true">
+							<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
+						</svg>
+					</a>
+				</div>
+			</nav>
+		</header>
+
+		<!-- scroll progress rail (walana-style, OSRS-flavored) -->
+		<div class="rail" aria-hidden="true">
+			<div class="rail-line"><div class="rail-node" id="rail-node"></div></div>
+		</div>
+		<div class="rail-readout" aria-hidden="true"><span id="rail-pct">0%</span></div>
+
+		<slot />
+
+		<footer class="site-footer">
+			<div class="container footer-inner">
+				<p>&copy; {new Date().getFullYear()} {SITE.name}</p>
+				<p class="footer-joke">0 packets dropped</p>
+			</div>
+		</footer>
+
+		<script>
+			// Scroll-reveal
+			const observer = new IntersectionObserver(
+				(entries) => {
+					for (const entry of entries) {
+						if (entry.isIntersecting) {
+							entry.target.classList.add('is-visible');
+							observer.unobserve(entry.target);
+						}
+					}
+				},
+				{ threshold: 0.12 }
+			);
+			document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+			// Scroll progress rail
+			const node = document.getElementById('rail-node');
+			const pct = document.getElementById('rail-pct');
+			const update = () => {
+				const max = document.documentElement.scrollHeight - window.innerHeight;
+				const p = max > 0 ? Math.min(100, Math.round((window.scrollY / max) * 100)) : 100;
+				if (node) node.style.top = `${p}%`;
+				if (pct) pct.textContent = `${p}%`;
+			};
+			window.addEventListener('scroll', update, { passive: true });
+			update();
+		</script>
+
+		<style>
+			.site-header {
+				position: sticky;
+				top: 0;
+				z-index: 50;
+				background: linear-gradient(180deg, rgba(33, 28, 22, 0.97), rgba(33, 28, 22, 0.92));
+				backdrop-filter: blur(6px);
+				border-bottom: 1px solid var(--black);
+				box-shadow: 0 1px 0 var(--bevel-shadow), 0 8px 24px rgba(0, 0, 0, 0.4);
+			}
+
+			.nav {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding-block: 0.8rem;
+			}
+
+			.brand {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.6rem;
+				font-family: var(--font-display);
+				font-size: 1.2rem;
+				color: var(--gold);
+			}
+
+			.brand:hover {
+				color: #ffd75e;
+			}
+
+			.brand-shield {
+				filter: drop-shadow(0 0 6px rgba(232, 181, 60, 0.35));
+			}
+
+			.nav-links {
+				display: flex;
+				align-items: center;
+				gap: 1.45rem;
+			}
+
+			.nav-links a {
+				font-family: var(--font-pixel);
+				font-size: 0.92rem;
+				color: var(--orange);
+				text-shadow: var(--rs-shadow);
+			}
+
+			.nav-links a:hover {
+				color: var(--yellow);
+			}
+
+			.nav-gh {
+				display: inline-flex;
+				color: var(--muted);
+			}
+
+			.nav-gh:hover {
+				color: var(--yellow);
+			}
+
+			/* progress rail */
+			.rail {
+				position: fixed;
+				left: max(calc((100vw - 1080px) / 2 - 3.5rem), 1.1rem);
+				top: 7rem;
+				bottom: 3rem;
+				width: 2px;
+				z-index: 10;
+				pointer-events: none;
+			}
+
+			.rail-line {
+				position: relative;
+				height: 100%;
+				width: 2px;
+				background: linear-gradient(180deg, var(--bevel-mid), rgba(91, 83, 69, 0.15));
+			}
+
+			.rail-node {
+				position: absolute;
+				left: 50%;
+				top: 0;
+				width: 9px;
+				height: 9px;
+				transform: translate(-50%, -50%) rotate(45deg);
+				background: radial-gradient(circle at 35% 35%, #ffd75e, var(--gold) 55%, #7a5b16);
+				border: 1px solid var(--black);
+				box-shadow: 0 0 8px rgba(232, 181, 60, 0.6);
+				transition: top 0.1s linear;
+			}
+
+			.rail-readout {
+				position: fixed;
+				right: 1.1rem;
+				bottom: 1rem;
+				z-index: 10;
+				font-family: var(--font-pixel);
+				font-size: 0.82rem;
+				color: var(--muted);
+				text-shadow: var(--rs-shadow);
+				pointer-events: none;
+			}
+
+			.rail-readout span {
+				color: var(--yellow);
+			}
+
+			@media (max-width: 1240px) {
+				.rail,
+				.rail-readout {
+					display: none;
+				}
+			}
+
+			.site-footer {
+				margin-top: 7rem;
+				border-top: 1px solid var(--black);
+				box-shadow: 0 -1px 0 var(--bevel-shadow);
+				padding-block: 2rem;
+			}
+
+			.footer-inner {
+				display: flex;
+				justify-content: space-between;
+				gap: 1rem;
+				flex-wrap: wrap;
+				font-size: 0.85rem;
+				color: var(--faint);
+			}
+
+			.footer-joke {
+				font-family: var(--font-pixel);
+				font-size: 0.85rem;
+			}
+
+			@media (max-width: 820px) {
+				.nav {
+					flex-wrap: wrap;
+					row-gap: 0.15rem;
+				}
+				.nav-links {
+					gap: 0.75rem 0.9rem;
+					flex-wrap: wrap;
+					justify-content: flex-end;
+				}
+				.nav-links a {
+					font-size: 0.82rem;
+				}
+				.brand span {
+					display: none;
+				}
+			}
+		</style>
+	</body>
+</html>

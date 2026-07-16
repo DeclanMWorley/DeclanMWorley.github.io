@@ -1,0 +1,958 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import SkillIcon from '../components/SkillIcon.astro';
+import { SITE, SKILLS, CERTS, EDUCATION, PROJECTS, EXPERIENCE, OTHER_EXPERIENCE, STATS, TICKER } from '../consts';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const writeups = (await getCollection('writeups', ({ data }) => !data.draft))
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.slice(0, 4);
+
+const dateFmt = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric' });
+
+const DIFF_COLORS: Record<string, string> = {
+	Beginner: 'var(--green)',
+	Intermediate: 'var(--cyan)',
+	Advanced: 'var(--gold)',
+	Expert: 'var(--red)',
+};
+---
+
+<Base title={`${SITE.name} — ${SITE.title}`}>
+	<main>
+		<!-- ====================== HERO + PROFILE (merged) ==================== -->
+		<section id="about" class="hero">
+			<div class="container hero-inner">
+				<div class="hero-copy">
+					<p class="hero-kicker">{SITE.name} · {SITE.title} · {SITE.location}</p>
+					<h1 class="hero-headline">
+						{SITE.headline.map((line, i) => (
+							<span class="hl-line" style={`--d:${0.1 + i * 0.12}s`}>{line}</span>
+						))}
+					</h1>
+					<p class="hero-tagline">{SITE.tagline}</p>
+					<div class="hero-actions">
+						<a class="rs-btn rs-btn--primary" href={`${base}${SITE.resume}`} download>Download resume</a>
+						<a class="rs-btn" href="#projects">See my work</a>
+					</div>
+				</div>
+
+				<aside class="rs-panel rs-panel--framed profile-card">
+					<h2 class="rs-panel-title">Profile</h2>
+					<div class="profile-body">
+						<img class="profile-avatar" src={`${base}${SITE.avatar}`} alt={`Portrait of ${SITE.name}`} width="92" height="92" />
+						<dl class="profile-list">
+							<div><dt>Role</dt><dd>Network Engineer</dd></div>
+							<div><dt>Focus</dt><dd>Routing · VPN · NAC</dd></div>
+							<div><dt>Certified</dt><dd>CCNP-S · CCNA · Sec+</dd></div>
+							<div><dt>Clearance</dt><dd>Active Secret · T3</dd></div>
+							<div><dt>Location</dt><dd>{SITE.location}</dd></div>
+						</dl>
+						<div class="uptime-bar" role="presentation">
+							<div class="uptime-fill"></div>
+							<span class="uptime-label">Uptime 99.99%</span>
+						</div>
+					</div>
+				</aside>
+			</div>
+			<!-- credentials ticker -->
+			<div class="ticker" aria-hidden="true">
+				<div class="ticker-track">
+					{[...TICKER, ...TICKER].map((item) => (
+						<span class="ticker-item">{item}<i>✦</i></span>
+					))}
+				</div>
+			</div>
+		</section>
+
+		<!-- ========================= CREDENTIALS ============================ -->
+		<section id="credentials" class="container section reveal">
+			<p class="section-label">01 / Credentials</p>
+			<h2 class="section-title">Certifications &amp; education.</h2>
+			<div class="cred-grid">
+				<ul class="cert-list">
+					{CERTS.map((cert) => (
+						<li class="rs-panel cert-card">
+							<span class="cert-check" aria-hidden="true">✓</span>
+							<div class="cert-info">
+								<span class="cert-name">{cert.name}</span>
+								<span class="cert-meta">{[cert.year, cert.note].filter(Boolean).join(' · ')}</span>
+							</div>
+						</li>
+					))}
+				</ul>
+				<div class="rs-panel rs-panel--framed edu-card">
+					<p class="edu-label">Education</p>
+					<p class="edu-degree">{EDUCATION.degree}</p>
+					<p class="edu-details">{EDUCATION.details}</p>
+					<div class="edu-rule" aria-hidden="true"></div>
+					<p class="edu-school">{EDUCATION.school}</p>
+					<p class="edu-years">{EDUCATION.where} · {EDUCATION.years}</p>
+				</div>
+			</div>
+			<div class="stats-row">
+				{STATS.map((stat) => (
+					<div class="rs-inset stat-box">
+						<span class="stat-value">{stat.value}</span>
+						<span class="stat-label">{stat.label}</span>
+					</div>
+				))}
+			</div>
+		</section>
+
+		<!-- ============================= SKILLS ============================= -->
+		<section id="skills" class="container section reveal">
+			<p class="section-label">02 / Skills</p>
+			<h2 class="section-title">What I work with.</h2>
+			<p class="skill-hint">Tip: hover over a skill to see what's behind the level.</p>
+			<div class="osrs-skill-grid">
+				{SKILLS.map((skill) => (
+					<div class="osrs-skill" tabindex="0">
+						<span class="osrs-skill-name">{skill.name}</span>
+						<div class="osrs-box">
+							<span class="osrs-icon"><SkillIcon icon={skill.icon} /></span>
+							<span class="osrs-lvls">
+								<b class="osrs-lvl osrs-lvl--top">{skill.level}</b>
+								<i class="osrs-slash" aria-hidden="true"></i>
+								<b class="osrs-lvl osrs-lvl--bottom">99</b>
+							</span>
+						</div>
+						<div class="rs-tooltip">
+							<strong>{skill.name}</strong>
+							<span class="tip-xp">XP: {skill.xp}</span>
+							{skill.next && <span class="tip-xp">Next level at: {skill.next}</span>}
+							<span class="tip-rule" aria-hidden="true"></span>
+							{skill.details.map((d) => <span>{d}<br /></span>)}
+						</div>
+					</div>
+				))}
+			</div>
+		</section>
+
+		<!-- =========================== EXPERIENCE =========================== -->
+		<section id="experience" class="container section reveal">
+			<p class="section-label">03 / Experience</p>
+			<h2 class="section-title">Five-plus years, hands on.</h2>
+			<div class="xp-list rs-panel rs-panel--framed">
+				{EXPERIENCE.map((job) => (
+					<div class="xp-row">
+						<span class="xp-when">{job.when}</span>
+						<div class="xp-main">
+							<h3 class="xp-role">{job.role}</h3>
+							<p class="xp-org">{job.org} · {job.where}</p>
+							<p class="xp-summary">{job.summary}</p>
+						</div>
+					</div>
+				))}
+			</div>
+
+			<h3 class="xp-subtitle">Other experience</h3>
+			<div class="xp-list rs-panel">
+				{OTHER_EXPERIENCE.map((job) => (
+					<div class="xp-row">
+						<span class="xp-when">{job.when}</span>
+						<div class="xp-main">
+							<h3 class="xp-role">{job.role}</h3>
+							<p class="xp-org">{job.org} · {job.where}</p>
+							<p class="xp-summary">{job.summary}</p>
+						</div>
+					</div>
+				))}
+			</div>
+		</section>
+
+		<!-- ============================ PROJECTS ============================ -->
+		<section id="projects" class="container section reveal">
+			<p class="section-label">04 / Projects</p>
+			<h2 class="section-title">Built, broken, and documented.</h2>
+			<div class="lab-list">
+				{PROJECTS.map((proj, i) => (
+					<a class="rs-panel lab-card" href={proj.url} target="_blank" rel="noopener noreferrer">
+						<div class="lab-body">
+							<p class="lab-kicker">{proj.kicker}</p>
+							<h3 class="lab-name">{proj.name}</h3>
+							<p class="lab-desc">{proj.description}</p>
+							<p class="lab-outcome">→ {proj.outcome}</p>
+							<div class="lab-tags">
+								{proj.tags.map((tag) => <span class="tag">{tag}</span>)}
+							</div>
+						</div>
+						<span class="lab-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+					</a>
+				))}
+			</div>
+		</section>
+
+		<!-- ============================ WRITING ============================= -->
+		<section id="writing" class="container section reveal">
+			<p class="section-label">05 / Writing</p>
+			<h2 class="section-title">Recent write-ups.</h2>
+			{writeups.length === 0 ? (
+				<p class="empty-note">Nothing published yet — first write-up coming soon.</p>
+			) : (
+				<div class="post-list rs-panel rs-panel--framed">
+					{writeups.map((post) => (
+						<a class="post-row" href={`${base}/writeups/${post.id}/`}>
+							<span class="post-diff" style={`--diff:${DIFF_COLORS[post.data.difficulty]}`} title={post.data.difficulty}></span>
+							<span class="post-cat">{post.data.category}</span>
+							<span class="post-title">{post.data.title}</span>
+							<time class="post-date" datetime={post.data.pubDate.toISOString()}>{dateFmt.format(post.data.pubDate)}</time>
+							<span class="post-arrow">→</span>
+						</a>
+					))}
+				</div>
+			)}
+			<div class="post-more">
+				<a class="rs-btn" href={`${base}/writeups/`}>All write-ups</a>
+			</div>
+		</section>
+
+		<!-- ============================= CONTACT ============================ -->
+		<section id="contact" class="container section reveal">
+			<p class="section-label">06 / Contact</p>
+			<h2 class="section-title">Get in touch.</h2>
+			<div class="rs-panel rs-panel--framed contact-panel">
+				<div class="contact-grid">
+					<div class="contact-info">
+						<p class="contact-line"><span class="rs-label">Email</span><a href={`mailto:${SITE.email}`}>{SITE.email}</a></p>
+						<p class="contact-line"><span class="rs-label">Location</span><span>{SITE.location}</span></p>
+						<p class="contact-line"><span class="rs-label">Status</span><span class="status-open">Open to new opportunities</span></p>
+					</div>
+					<div class="contact-links">
+						<a class="rs-btn" href={SITE.github} target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+						<a class="rs-btn" href={SITE.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>
+						<a class="rs-btn rs-btn--primary" href={`mailto:${SITE.email}`}>Email me</a>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<style>
+		/* ------- hero (merged intro + profile) ------- */
+		.hero {
+			padding-top: 5.5rem;
+		}
+
+		.hero-inner {
+			display: grid;
+			grid-template-columns: 1.2fr 0.8fr;
+			gap: 3rem;
+			align-items: center;
+			padding-bottom: 4.5rem;
+		}
+
+		.hero-kicker {
+			font-family: var(--font-pixel);
+			font-size: 0.95rem;
+			letter-spacing: 0.16em;
+			text-transform: uppercase;
+			color: var(--orange);
+			text-shadow: var(--rs-shadow);
+			animation: rise 0.7s ease both;
+		}
+
+		.hero-headline {
+			margin: 1.3rem 0 1.5rem;
+			font-size: clamp(2.7rem, 6vw, 4.3rem);
+			color: var(--gold);
+			text-shadow: 0 0 34px rgba(232, 181, 60, 0.25), 0 3px 0 rgba(0, 0, 0, 0.8);
+		}
+
+		.hl-line {
+			display: block;
+			animation: rise 0.7s var(--d) ease both;
+		}
+
+		.hero-tagline {
+			max-width: 34rem;
+			font-size: 1.1rem;
+			color: var(--muted);
+			animation: rise 0.7s 0.45s ease both;
+		}
+
+		.hero-actions {
+			display: flex;
+			gap: 1rem;
+			flex-wrap: wrap;
+			margin-top: 2.1rem;
+			animation: rise 0.7s 0.55s ease both;
+		}
+
+		@keyframes rise {
+			from {
+				opacity: 0;
+				transform: translateY(18px);
+			}
+		}
+
+		/* profile card */
+		.profile-card {
+			animation: rise 0.7s 0.35s ease both;
+		}
+
+		.profile-body {
+			padding: 1.2rem 1.3rem 1.4rem;
+		}
+
+		.profile-avatar {
+			display: block;
+			margin: 0 auto 1rem;
+			width: 92px;
+			height: 92px;
+			object-fit: cover;
+			border: 1px solid var(--black);
+			box-shadow:
+				0 0 0 1px var(--bevel-hi2),
+				0 0 0 2px var(--bevel-shadow),
+				0 5px 14px rgba(0, 0, 0, 0.5);
+		}
+
+		.profile-list div {
+			display: flex;
+			justify-content: space-between;
+			gap: 1rem;
+			padding-block: 0.34rem;
+		}
+
+		.profile-list div + div {
+			border-top: 1px solid rgba(0, 0, 0, 0.35);
+			box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.03);
+		}
+
+		.profile-list dt {
+			font-family: var(--font-pixel);
+			font-size: 0.88rem;
+			color: var(--orange);
+			text-shadow: var(--rs-shadow);
+		}
+
+		.profile-list dd {
+			font-family: var(--font-pixel);
+			font-size: 0.88rem;
+			color: var(--white);
+			text-shadow: var(--rs-shadow);
+			text-align: right;
+		}
+
+		.uptime-bar {
+			position: relative;
+			margin-top: 1.1rem;
+			height: 20px;
+			background: #3d1410;
+			border: 1px solid var(--black);
+			box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+		}
+
+		.uptime-fill {
+			height: 100%;
+			width: 100%;
+			background: linear-gradient(180deg, #35b435, #1e8c1e 60%, #156815);
+		}
+
+		.uptime-label {
+			position: absolute;
+			inset: 0;
+			display: grid;
+			place-items: center;
+			font-family: var(--font-pixel);
+			font-size: 0.78rem;
+			color: var(--white);
+			text-shadow: var(--rs-shadow);
+		}
+
+		/* ticker (z-index keeps it above the fixed progress rail) */
+		.ticker {
+			position: relative;
+			z-index: 20;
+			overflow: hidden;
+			border-top: 1px solid var(--black);
+			border-bottom: 1px solid var(--black);
+			background: var(--panel-dark);
+			box-shadow:
+				inset 0 1px 0 var(--bevel-shadow),
+				inset 0 -1px 0 var(--bevel-shadow),
+				inset 0 6px 14px rgba(0, 0, 0, 0.35);
+			padding-block: 0.7rem;
+		}
+
+		.ticker-track {
+			display: flex;
+			width: max-content;
+			animation: ticker 36s linear infinite;
+		}
+
+		.ticker-item {
+			font-family: var(--font-pixel);
+			font-size: 0.95rem;
+			color: var(--orange);
+			text-shadow: var(--rs-shadow);
+			white-space: nowrap;
+		}
+
+		.ticker-item i {
+			font-style: normal;
+			color: var(--faint);
+			margin-inline: 1.4rem;
+		}
+
+		@keyframes ticker {
+			to {
+				transform: translateX(-50%);
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.ticker-track {
+				animation: none;
+			}
+			.hero-kicker, .hl-line, .hero-tagline, .hero-actions, .profile-card {
+				animation: none;
+			}
+		}
+
+		/* ------- credentials ------- */
+		.cred-grid {
+			display: grid;
+			grid-template-columns: 1.15fr 0.85fr;
+			gap: 1rem;
+			align-items: stretch;
+		}
+
+		.cert-list {
+			list-style: none;
+			display: grid;
+			gap: 1rem;
+		}
+
+		.cert-card {
+			display: flex;
+			align-items: center;
+			gap: 1.1rem;
+			padding: 1.1rem 1.4rem;
+		}
+
+		.cert-check {
+			font-family: var(--font-pixel);
+			font-size: 1.3rem;
+			color: var(--green);
+			text-shadow: var(--rs-shadow);
+		}
+
+		.cert-info {
+			display: grid;
+			gap: 0.15rem;
+		}
+
+		.cert-name {
+			font-size: 1.05rem;
+			color: var(--text);
+			font-weight: 600;
+		}
+
+		.cert-meta {
+			font-family: var(--font-pixel);
+			font-size: 0.8rem;
+			color: var(--faint);
+			text-shadow: var(--rs-shadow);
+		}
+
+		/* education showcase — parchment certificate */
+		.edu-card {
+			background:
+				url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E"),
+				linear-gradient(180deg, var(--parchment), var(--parchment-dark));
+			display: grid;
+			align-content: center;
+			justify-items: center;
+			text-align: center;
+			padding: 2rem 1.8rem;
+			gap: 0.3rem;
+		}
+
+		.edu-label {
+			font-family: var(--font-pixel);
+			font-size: 0.8rem;
+			letter-spacing: 0.28em;
+			text-transform: uppercase;
+			color: var(--ink-soft);
+		}
+
+		.edu-degree {
+			font-family: var(--font-display);
+			font-size: 1.75rem;
+			color: #6d3b0f;
+			line-height: 1.15;
+			margin-top: 0.4rem;
+		}
+
+		.edu-details {
+			font-size: 0.95rem;
+			color: var(--ink-soft);
+			font-style: italic;
+		}
+
+		.edu-rule {
+			width: 70%;
+			height: 1px;
+			margin-block: 0.9rem 0.7rem;
+			background: linear-gradient(90deg, transparent, rgba(109, 59, 15, 0.5), transparent);
+		}
+
+		.edu-school {
+			font-family: var(--font-caps);
+			font-weight: 600;
+			font-size: 0.95rem;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: var(--ink);
+		}
+
+		.edu-years {
+			font-family: var(--font-pixel);
+			font-size: 0.82rem;
+			color: var(--ink-soft);
+		}
+
+		/* stat counters */
+		.stats-row {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 0.9rem;
+			margin-top: 1rem;
+		}
+
+		.stat-box {
+			padding: 1.1rem 1.2rem;
+			display: grid;
+			gap: 0.2rem;
+		}
+
+		.stat-value {
+			font-family: var(--font-pixel);
+			font-size: 2rem;
+			color: var(--yellow);
+			text-shadow: var(--rs-shadow);
+			line-height: 1;
+		}
+
+		.stat-label {
+			font-family: var(--font-pixel);
+			font-size: 0.8rem;
+			color: var(--muted);
+			text-shadow: var(--rs-shadow);
+			line-height: 1.4;
+		}
+
+		/* ------- skills — OSRS stats-tab recreation ------- */
+		.skill-hint {
+			font-family: var(--font-pixel);
+			font-size: 0.95rem;
+			color: var(--muted);
+			text-shadow: var(--rs-shadow);
+			margin: -1.4rem 0 1.8rem;
+		}
+
+		/* 3-column grid like the game's stats tab */
+		.osrs-skill-grid {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 0.55rem;
+			max-width: 720px;
+			margin-inline: auto;
+		}
+
+		.osrs-skill {
+			position: relative;
+			display: grid;
+			gap: 0.4rem;
+			outline: none;
+		}
+
+		.osrs-skill-name {
+			font-family: var(--font-pixel);
+			font-size: 0.9rem;
+			color: var(--orange);
+			text-shadow: var(--rs-shadow);
+			text-align: center;
+			line-height: 1.2;
+			align-self: end;
+		}
+
+		/* the skill box itself — sampled bevel, rounded like the game */
+		.osrs-box {
+			position: relative;
+			height: 58px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0 16px 0 14px;
+			background: linear-gradient(180deg, #3f382e, #2c2620);
+			border: 1px solid var(--black);
+			border-radius: 6px;
+			box-shadow:
+				inset 1px 1px 0 var(--bevel-mid),
+				inset -1px -1px 0 #1f1a14,
+				0 1px 3px rgba(0, 0, 0, 0.4);
+			transition: filter 0.1s ease;
+		}
+
+		.osrs-skill:hover .osrs-box,
+		.osrs-skill:focus-visible .osrs-box {
+			filter: brightness(1.18);
+		}
+
+		.osrs-icon {
+			color: var(--gold);
+			display: grid;
+			place-items: center;
+			filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.7));
+		}
+
+		/* current level top-left, base level bottom-right, diagonal between —
+		   exactly how the game draws them */
+		.osrs-lvls {
+			position: relative;
+			width: 52px;
+			height: 100%;
+		}
+
+		.osrs-lvl {
+			position: absolute;
+			font-family: var(--font-pixel);
+			font-weight: 400;
+			font-size: 1.1rem;
+			line-height: 1;
+			color: var(--yellow);
+			text-shadow: var(--rs-shadow);
+		}
+
+		.osrs-lvl--top {
+			top: 8px;
+			left: 0;
+		}
+
+		.osrs-lvl--bottom {
+			bottom: 8px;
+			right: 0;
+		}
+
+		.osrs-slash {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			width: 30px;
+			height: 1px;
+			background: rgba(0, 0, 0, 0.55);
+			box-shadow: 0 1px 0 rgba(255, 255, 255, 0.07);
+			transform: translate(-50%, -50%) rotate(-45deg);
+		}
+
+		/* tooltip extras — XP lines like the in-game hover */
+		.rs-tooltip .tip-xp {
+			display: block;
+			font-family: var(--font-pixel);
+			font-size: 0.9rem;
+		}
+
+		.rs-tooltip .tip-rule {
+			display: block;
+			height: 1px;
+			background: rgba(43, 33, 19, 0.3);
+			margin: 0.4rem 0;
+		}
+
+		/* ------- experience ------- */
+		.xp-list {
+			padding: 0.6rem 0;
+		}
+
+		.xp-row {
+			display: grid;
+			grid-template-columns: 110px 1fr;
+			gap: 1.4rem;
+			padding: 1.35rem 1.6rem;
+		}
+
+		.xp-row + .xp-row {
+			border-top: 1px solid rgba(0, 0, 0, 0.4);
+			box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.03);
+		}
+
+		.xp-when {
+			font-family: var(--font-pixel);
+			font-size: 0.95rem;
+			color: var(--yellow);
+			text-shadow: var(--rs-shadow);
+			padding-top: 0.25rem;
+			white-space: nowrap;
+		}
+
+		.xp-role {
+			font-size: 1.3rem;
+			color: var(--gold);
+		}
+
+		.xp-org {
+			font-family: var(--font-pixel);
+			font-size: 0.82rem;
+			color: var(--orange);
+			text-shadow: var(--rs-shadow);
+			margin-top: 0.2rem;
+		}
+
+		.xp-summary {
+			margin-top: 0.5rem;
+			font-size: 0.96rem;
+			color: var(--muted);
+		}
+
+		.xp-subtitle {
+			font-family: var(--font-pixel);
+			font-size: 1rem;
+			color: var(--muted);
+			text-shadow: var(--rs-shadow);
+			margin: 2rem 0 0.9rem;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+		}
+
+		/* ------- projects ------- */
+		.lab-list {
+			display: grid;
+			gap: 1rem;
+		}
+
+		.lab-card {
+			position: relative;
+			display: block;
+			padding: 1.6rem 1.8rem;
+			color: inherit;
+			overflow: hidden;
+			transition: transform 0.15s ease;
+		}
+
+		.lab-card:hover {
+			transform: translateX(6px);
+		}
+
+		.lab-body {
+			position: relative;
+			z-index: 1;
+			max-width: 46rem;
+		}
+
+		.lab-kicker {
+			font-family: var(--font-pixel);
+			font-size: 0.82rem;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			color: var(--muted);
+			text-shadow: var(--rs-shadow);
+		}
+
+		.lab-name {
+			font-size: 1.5rem;
+			color: var(--orange);
+			margin-top: 0.4rem;
+			transition: color 0.12s ease;
+		}
+
+		.lab-card:hover .lab-name {
+			color: var(--yellow);
+		}
+
+		.lab-desc {
+			margin-top: 0.5rem;
+			font-size: 0.96rem;
+			color: var(--muted);
+		}
+
+		.lab-outcome {
+			margin-top: 0.7rem;
+			font-family: var(--font-pixel);
+			font-size: 0.9rem;
+			color: var(--green);
+			text-shadow: var(--rs-shadow);
+		}
+
+		.lab-tags {
+			display: flex;
+			gap: 0.45rem;
+			flex-wrap: wrap;
+			margin-top: 0.9rem;
+		}
+
+		.lab-num {
+			position: absolute;
+			right: 1.4rem;
+			top: 50%;
+			transform: translateY(-50%);
+			font-family: var(--font-pixel);
+			font-size: 5.5rem;
+			color: rgba(125, 117, 99, 0.16);
+			pointer-events: none;
+		}
+
+		/* ------- writing ------- */
+		.post-list {
+			padding: 0.5rem 0;
+		}
+
+		.post-row {
+			display: grid;
+			grid-template-columns: auto auto 1fr auto auto;
+			align-items: center;
+			gap: 1.1rem;
+			padding: 1.05rem 1.5rem;
+			color: inherit;
+		}
+
+		.post-row + .post-row {
+			border-top: 1px solid rgba(0, 0, 0, 0.4);
+			box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.03);
+		}
+
+		.post-diff {
+			width: 9px;
+			height: 9px;
+			border-radius: 50%;
+			background: var(--diff);
+			box-shadow: 0 0 7px var(--diff);
+		}
+
+		.post-cat {
+			font-family: var(--font-pixel);
+			font-size: 0.8rem;
+			color: var(--muted);
+			text-shadow: var(--rs-shadow);
+			white-space: nowrap;
+		}
+
+		.post-title {
+			font-family: var(--font-display);
+			font-size: 1.18rem;
+			color: var(--orange);
+			transition: color 0.12s ease;
+			min-width: 0;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.post-row:hover .post-title {
+			color: var(--yellow);
+		}
+
+		.post-date {
+			font-family: var(--font-pixel);
+			font-size: 0.8rem;
+			color: var(--faint);
+			white-space: nowrap;
+		}
+
+		.post-arrow {
+			font-family: var(--font-pixel);
+			color: var(--gold);
+			transition: transform 0.15s ease;
+		}
+
+		.post-row:hover .post-arrow {
+			transform: translateX(4px);
+		}
+
+		.post-more {
+			margin-top: 1.6rem;
+			text-align: center;
+		}
+
+		.empty-note {
+			color: var(--muted);
+			font-style: italic;
+		}
+
+		/* ------- contact ------- */
+		.contact-panel {
+			padding: 2.2rem 2.4rem;
+		}
+
+		.contact-grid {
+			display: grid;
+			grid-template-columns: 1fr auto;
+			gap: 2rem;
+			align-items: center;
+		}
+
+		.contact-line {
+			display: flex;
+			gap: 1.2rem;
+			align-items: baseline;
+			padding-block: 0.4rem;
+			font-size: 1.02rem;
+		}
+
+		.contact-line .rs-label {
+			font-size: 0.88rem;
+			min-width: 5.2rem;
+		}
+
+		.status-open {
+			color: var(--green);
+			text-shadow: var(--rs-shadow);
+			font-family: var(--font-pixel);
+			font-size: 0.95rem;
+		}
+
+		.contact-links {
+			display: flex;
+			flex-direction: column;
+			gap: 0.8rem;
+		}
+
+		/* ------- responsive ------- */
+		@media (max-width: 900px) {
+			.hero-inner {
+				grid-template-columns: 1fr;
+			}
+			.cred-grid {
+				grid-template-columns: 1fr;
+			}
+			.stats-row {
+				grid-template-columns: repeat(2, 1fr);
+			}
+			.contact-grid {
+				grid-template-columns: 1fr;
+			}
+			.contact-links {
+				flex-direction: row;
+				flex-wrap: wrap;
+			}
+		}
+
+		@media (max-width: 560px) {
+			.osrs-skill-grid {
+				gap: 0.45rem;
+			}
+			.osrs-box {
+				padding: 0 10px;
+				height: 52px;
+			}
+			.osrs-skill-name {
+				font-size: 0.78rem;
+			}
+			.xp-row {
+				grid-template-columns: 1fr;
+				gap: 0.3rem;
+			}
+			.post-cat,
+			.post-date {
+				display: none;
+			}
+			.lab-num {
+				display: none;
+			}
+		}
+	</style>
+</Base>

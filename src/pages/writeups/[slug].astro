@@ -1,0 +1,298 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { SITE } from '../../consts';
+
+export async function getStaticPaths() {
+	const posts = await getCollection('writeups', ({ data }) => !data.draft);
+	return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const dateFmt = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC',  day: 'numeric', month: 'long', year: 'numeric' });
+
+const DIFF_COLORS: Record<string, string> = {
+	Beginner: 'var(--green)',
+	Intermediate: 'var(--cyan)',
+	Advanced: 'var(--gold)',
+	Expert: 'var(--red)',
+};
+---
+
+<Base title={`${post.data.title} — ${SITE.name}`} description={post.data.description}>
+	<main class="container">
+		<article class="writeup">
+			<header class="writeup-header">
+				<a class="back-link" href={`${base}/writeups/`}>← Write-ups</a>
+				<h1>{post.data.title}</h1>
+				<p class="writeup-desc">{post.data.description}</p>
+				<div class="writeup-meta">
+					<span class="meta-diff" style={`--diff:${DIFF_COLORS[post.data.difficulty]}`}>
+						<i></i>{post.data.difficulty}
+					</span>
+					<span class="meta-sep">·</span>
+					<span>{post.data.category}</span>
+					<span class="meta-sep">·</span>
+					<time datetime={post.data.pubDate.toISOString()}>{dateFmt.format(post.data.pubDate)}</time>
+				</div>
+				{post.data.tags.length > 0 && (
+					<div class="writeup-tags">
+						{post.data.tags.map((tag) => (
+							<span class="tag">{tag}</span>
+						))}
+					</div>
+				)}
+			</header>
+
+			<div class="parchment rs-panel--framed">
+				<div class="prose">
+					<Content />
+				</div>
+			</div>
+
+			<footer class="writeup-footer">
+				<a class="rs-btn" href={`${base}/writeups/`}>← All write-ups</a>
+			</footer>
+		</article>
+	</main>
+
+	<style>
+		.writeup {
+			max-width: 800px;
+			margin-inline: auto;
+			padding-top: 3.5rem;
+		}
+
+		.back-link {
+			font-family: var(--font-caps);
+			font-weight: 600;
+			font-size: 0.75rem;
+			letter-spacing: 0.18em;
+			text-transform: uppercase;
+			color: var(--muted);
+		}
+
+		.back-link:hover {
+			color: var(--yellow);
+		}
+
+		.writeup-header h1 {
+			font-size: clamp(2rem, 4.5vw, 2.9rem);
+			margin: 1rem 0 0.7rem;
+		}
+
+		.writeup-desc {
+			color: var(--muted);
+			font-size: 1.1rem;
+			font-style: italic;
+		}
+
+		.writeup-meta {
+			display: flex;
+			align-items: center;
+			gap: 0.7rem;
+			flex-wrap: wrap;
+			margin-top: 1.1rem;
+			font-family: var(--font-caps);
+			font-weight: 600;
+			font-size: 0.75rem;
+			letter-spacing: 0.13em;
+			text-transform: uppercase;
+			color: var(--muted);
+		}
+
+		.meta-diff {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.45rem;
+			color: var(--text);
+		}
+
+		.meta-diff i {
+			width: 9px;
+			height: 9px;
+			border-radius: 50%;
+			background: var(--diff);
+			box-shadow: 0 0 6px var(--diff);
+		}
+
+		.meta-sep {
+			color: var(--faint);
+		}
+
+		.writeup-tags {
+			display: flex;
+			gap: 0.45rem;
+			flex-wrap: wrap;
+			margin-top: 0.9rem;
+		}
+
+		.tag {
+			font-family: var(--font-mono);
+			font-size: 0.7rem;
+			color: var(--gold);
+			background: rgba(232, 181, 60, 0.08);
+			border: 1px solid rgba(232, 181, 60, 0.3);
+			padding: 0.14rem 0.55rem;
+			border-radius: 2px;
+		}
+
+		/* ------- parchment reading surface ------- */
+		.parchment {
+			position: relative;
+			margin-top: 2.2rem;
+			background:
+				url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E"),
+				linear-gradient(180deg, var(--parchment), var(--parchment-dark));
+			border: 2px solid var(--black);
+			box-shadow:
+				inset 0 0 0 1px #f6ecd2,
+				inset 0 0 60px rgba(120, 90, 40, 0.25),
+				0 14px 40px rgba(0, 0, 0, 0.55);
+			border-radius: 3px;
+			padding: clamp(1.6rem, 4vw, 3.2rem);
+		}
+
+		.writeup-footer {
+			margin-top: 2.5rem;
+			text-align: center;
+		}
+	</style>
+
+	<style is:global>
+		/* Markdown prose on parchment */
+		.prose {
+			color: var(--ink);
+			font-size: 1.05rem;
+		}
+
+		.prose h1,
+		.prose h2,
+		.prose h3,
+		.prose h4 {
+			font-family: var(--font-display);
+			color: #6d3b0f;
+			margin: 1.8em 0 0.6em;
+			line-height: 1.2;
+		}
+
+		.prose h1 { font-size: 1.9rem; }
+		.prose h2 {
+			font-size: 1.5rem;
+			padding-bottom: 0.3rem;
+			border-bottom: 1px solid rgba(109, 59, 15, 0.3);
+		}
+		.prose h3 { font-size: 1.2rem; }
+
+		.prose > :first-child {
+			margin-top: 0;
+		}
+
+		.prose p,
+		.prose ul,
+		.prose ol {
+			margin-bottom: 1.1em;
+		}
+
+		.prose ul,
+		.prose ol {
+			padding-left: 1.4em;
+		}
+
+		.prose li + li {
+			margin-top: 0.35em;
+		}
+
+		.prose a {
+			color: #9a4a0a;
+			text-decoration: underline;
+			text-underline-offset: 2px;
+		}
+
+		.prose a:hover {
+			color: #c05e0d;
+		}
+
+		.prose strong {
+			color: #1d1509;
+		}
+
+		.prose blockquote {
+			border-left: 3px solid #b08d4f;
+			background: rgba(176, 141, 79, 0.12);
+			padding: 0.7em 1.1em;
+			margin: 1.2em 0;
+			font-style: italic;
+			color: var(--ink-soft);
+		}
+
+		.prose code {
+			font-family: var(--font-mono);
+			font-size: 0.85em;
+			background: rgba(43, 33, 19, 0.1);
+			border: 1px solid rgba(43, 33, 19, 0.15);
+			padding: 0.1em 0.35em;
+			border-radius: 3px;
+		}
+
+		.prose pre {
+			margin: 1.3em 0;
+			padding: 1.1em 1.3em;
+			border-radius: 4px;
+			border: 2px solid var(--black);
+			box-shadow: inset 0 0 0 1px var(--bevel-shadow), 0 6px 18px rgba(0, 0, 0, 0.35);
+			overflow-x: auto;
+			font-size: 0.86rem;
+			line-height: 1.6;
+		}
+
+		.prose pre code {
+			background: none;
+			border: none;
+			padding: 0;
+			font-size: inherit;
+		}
+
+		.prose img {
+			max-width: 100%;
+			height: auto;
+			border: 2px solid var(--black);
+			box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+			border-radius: 3px;
+			margin: 1.2em 0;
+		}
+
+		.prose table {
+			width: 100%;
+			border-collapse: collapse;
+			margin: 1.3em 0;
+			font-size: 0.92rem;
+		}
+
+		.prose th,
+		.prose td {
+			border: 1px solid rgba(43, 33, 19, 0.3);
+			padding: 0.5em 0.8em;
+			text-align: left;
+		}
+
+		.prose th {
+			background: rgba(43, 33, 19, 0.08);
+			font-family: var(--font-caps);
+			font-weight: 700;
+			font-size: 0.78rem;
+			letter-spacing: 0.06em;
+			text-transform: uppercase;
+		}
+
+		.prose hr {
+			border: none;
+			height: 1px;
+			background: linear-gradient(90deg, transparent, rgba(109, 59, 15, 0.4), transparent);
+			margin: 2em 0;
+		}
+	</style>
+</Base>

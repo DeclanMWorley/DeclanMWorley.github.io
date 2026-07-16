@@ -1,0 +1,348 @@
+/* ==========================================================================
+   OSRS interface theme — colors sampled from the actual game UI
+   (quest tab: panel #3e3529, inset #332b21, bevel #7d7563→#4f4836,
+    orange #ff981f, hover yellow #ffff00).
+   Structure/flow inspired by long-form single-page portfolios.
+   ========================================================================== */
+
+/* RuneScape UF (fan-made recreation of the game font).
+   Restricted to ASCII so any character it can't draw well (·, —, ✦, arrows…)
+   falls through to Pixelify Sans instead of rendering as tofu. */
+@font-face {
+	font-family: 'RuneScape UF';
+	src: url('../fonts/runescape_uf.woff2') format('woff2'), url('../fonts/runescape_uf_fixed.ttf') format('truetype');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+	unicode-range: U+0020-007E;
+}
+
+:root {
+	/* sampled OSRS palette */
+	--bg: #211c16; /* page backdrop, darker than panels */
+	--panel: #3e3529; /* classic interface brown */
+	--panel-dark: #332b21; /* inset/list background */
+	--panel-light: #494034;
+	--bevel-hi: #7d7563;
+	--bevel-hi2: #6c6453;
+	--bevel-mid: #5b5345;
+	--bevel-mid2: #575040;
+	--bevel-lo: #4f4836;
+	--bevel-shadow: #383226;
+	--black: #000000;
+	--orange: #ff981f; /* OSRS interface orange */
+	--yellow: #ffff00; /* OSRS hover/option yellow */
+	--gold: #e8b53c;
+	--white: #ffffff;
+	--text: #d6c9b1;
+	--muted: #a3947c;
+	--faint: #7a6d58;
+	--green: #00c832; /* quest complete */
+	--red: #ff3232; /* quest not started */
+	--cyan: #5bc0de;
+	--parchment: #e9dcbc;
+	--parchment-dark: #d9c9a2;
+	--ink: #2b2113;
+	--ink-soft: #4d3f28;
+
+	/* type */
+	--font-display: 'MedievalSharp', 'Palatino Linotype', serif;
+	--font-pixel: 'RuneScape UF', 'Pixelify Sans', 'Courier New', monospace;
+	--font-caps: 'Cinzel', 'Palatino Linotype', serif;
+	--font-body: 'Geist Variable', 'Segoe UI', system-ui, sans-serif;
+	--font-mono: 'JetBrains Mono', Consolas, monospace;
+
+	/* the OSRS text shadow — everything in the game UI has it */
+	--rs-shadow: 1px 1px 0 #000;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+html {
+	scroll-behavior: smooth;
+	scroll-padding-top: 5rem;
+}
+
+body {
+	background-color: var(--bg);
+	background-image:
+		radial-gradient(ellipse 70% 45% at 50% -5%, rgba(232, 181, 60, 0.05), transparent),
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+	color: var(--text);
+	font-family: var(--font-body);
+	font-size: 1.0625rem;
+	line-height: 1.7;
+	min-height: 100vh;
+}
+
+::selection {
+	background: var(--orange);
+	color: var(--black);
+}
+
+/* OSRS-style scrollbar */
+::-webkit-scrollbar {
+	width: 14px;
+}
+::-webkit-scrollbar-track {
+	background: var(--panel-dark);
+	border-left: 1px solid var(--black);
+}
+::-webkit-scrollbar-thumb {
+	background: linear-gradient(90deg, var(--bevel-mid), var(--bevel-lo));
+	border: 1px solid var(--black);
+	box-shadow: inset 1px 1px 0 var(--bevel-hi2);
+}
+
+/* ---- typography ---------------------------------------------------------- */
+
+h1, h2, h3 {
+	font-family: var(--font-display);
+	font-weight: 400;
+	color: var(--gold);
+	line-height: 1.12;
+	letter-spacing: 0.01em;
+}
+
+a {
+	color: var(--orange);
+	text-decoration: none;
+	transition: color 0.12s ease;
+}
+
+a:hover {
+	color: var(--yellow);
+}
+
+/* numbered kicker, e.g. "01 / ABOUT" — pixel font, OSRS orange w/ shadow */
+.section-label {
+	font-family: var(--font-pixel);
+	font-size: 0.95rem;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--orange);
+	text-shadow: var(--rs-shadow);
+}
+
+.section-title {
+	font-size: clamp(1.9rem, 4vw, 2.7rem);
+	margin: 0.55rem 0 2.2rem;
+	text-shadow: 0 2px 0 rgba(0, 0, 0, 0.7);
+}
+
+/* ---- OSRS panel chrome ---------------------------------------------------
+   Recreates the sampled game border: black outline → light bevel →
+   stone layers → dark inner seam → brown interior. */
+
+.rs-panel {
+	position: relative;
+	background: var(--panel);
+	border: 1px solid var(--black);
+	box-shadow:
+		inset 0 0 0 1px var(--bevel-hi2),
+		inset 0 0 0 2px var(--bevel-mid2),
+		inset 0 0 0 3px var(--bevel-lo),
+		inset 0 0 0 4px var(--bevel-shadow),
+		0 0 0 1px rgba(0, 0, 0, 0.6),
+		0 8px 22px rgba(0, 0, 0, 0.45);
+}
+
+/* directional light pass — subtly brighter top-left like the game bevel */
+.rs-panel::after {
+	content: '';
+	position: absolute;
+	inset: 1px;
+	pointer-events: none;
+	box-shadow:
+		inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+		inset -1px -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* darker inset variant — like the quest list's scroll area */
+.rs-inset {
+	background: var(--panel-dark);
+	border: 1px solid var(--black);
+	box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.5), inset -1px -1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* title strip across the top of a panel, like "Quest List" */
+.rs-panel-title {
+	font-family: var(--font-pixel);
+	font-size: 1.05rem;
+	text-align: center;
+	color: var(--orange);
+	text-shadow: var(--rs-shadow);
+	padding: 0.55rem 1rem 0.45rem;
+	border-bottom: 1px solid var(--black);
+	box-shadow: 0 1px 0 var(--bevel-shadow);
+	letter-spacing: 0.06em;
+}
+
+/* gold corner studs (the metal pins on game frames) */
+.rs-panel--framed::before {
+	content: '';
+	position: absolute;
+	inset: 4px;
+	pointer-events: none;
+	z-index: 2;
+	background-image:
+		radial-gradient(circle at 3px 3px, #ffd75e 0 1.5px, var(--gold) 2.5px, #6e5314 3.5px, transparent 4.5px),
+		radial-gradient(circle at calc(100% - 3px) 3px, #ffd75e 0 1.5px, var(--gold) 2.5px, #6e5314 3.5px, transparent 4.5px),
+		radial-gradient(circle at 3px calc(100% - 3px), #ffd75e 0 1.5px, var(--gold) 2.5px, #6e5314 3.5px, transparent 4.5px),
+		radial-gradient(circle at calc(100% - 3px) calc(100% - 3px), #ffd75e 0 1.5px, var(--gold) 2.5px, #6e5314 3.5px, transparent 4.5px);
+}
+
+/* ---- OSRS text helpers ---------------------------------------------------- */
+
+.rs-label {
+	font-family: var(--font-pixel);
+	color: var(--orange);
+	text-shadow: var(--rs-shadow);
+}
+
+.rs-value {
+	font-family: var(--font-pixel);
+	color: var(--white);
+	text-shadow: var(--rs-shadow);
+}
+
+.rs-yellow {
+	color: var(--yellow);
+	text-shadow: var(--rs-shadow);
+}
+
+/* ---- buttons — stone slab like the game's dialog buttons ------------------ */
+
+.rs-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55rem;
+	font-family: var(--font-pixel);
+	font-size: 1rem;
+	letter-spacing: 0.05em;
+	color: var(--orange);
+	text-shadow: var(--rs-shadow);
+	background: linear-gradient(180deg, var(--panel-light), var(--panel) 55%, var(--panel-dark));
+	border: 1px solid var(--black);
+	box-shadow:
+		inset 0 0 0 1px var(--bevel-hi2),
+		inset 0 0 0 2px var(--bevel-lo),
+		inset 0 -6px 10px rgba(0, 0, 0, 0.3);
+	padding: 0.7rem 1.4rem;
+	cursor: pointer;
+	transition: color 0.12s ease, box-shadow 0.15s ease, transform 0.08s ease;
+}
+
+.rs-btn:hover {
+	color: var(--yellow);
+	box-shadow:
+		inset 0 0 0 1px var(--gold),
+		inset 0 0 0 2px var(--bevel-lo),
+		inset 0 -6px 10px rgba(0, 0, 0, 0.3),
+		0 0 14px rgba(232, 181, 60, 0.25);
+}
+
+.rs-btn:active {
+	transform: translateY(1px);
+}
+
+.rs-btn--primary {
+	color: #2b1d06;
+	text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+	background: linear-gradient(180deg, #ffd75e, var(--gold) 55%, #b5831f);
+	box-shadow:
+		inset 0 0 0 1px #fff0b8,
+		inset 0 -8px 12px rgba(122, 82, 10, 0.45);
+}
+
+.rs-btn--primary:hover {
+	color: #000;
+	box-shadow:
+		inset 0 0 0 1px #fff8d8,
+		inset 0 -8px 12px rgba(122, 82, 10, 0.45),
+		0 0 20px rgba(255, 215, 94, 0.4);
+}
+
+/* ---- OSRS hover tooltip (khaki box) --------------------------------------- */
+
+.rs-tooltip {
+	position: absolute;
+	z-index: 20;
+	left: 50%;
+	bottom: calc(100% + 10px);
+	transform: translateX(-50%) translateY(4px);
+	min-width: 210px;
+	background: #f7f0cd;
+	color: var(--ink);
+	border: 2px solid #2b2113;
+	box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+	padding: 0.6rem 0.8rem;
+	font-size: 0.85rem;
+	line-height: 1.5;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.rs-tooltip strong {
+	display: block;
+	font-family: var(--font-pixel);
+	font-size: 0.9rem;
+	margin-bottom: 0.25rem;
+}
+
+*:hover > .rs-tooltip,
+*:focus-visible > .rs-tooltip {
+	opacity: 1;
+	transform: translateX(-50%) translateY(0);
+}
+
+/* ---- tags ------------------------------------------------------------------ */
+
+.tag {
+	font-family: var(--font-pixel);
+	font-size: 0.78rem;
+	color: var(--orange);
+	text-shadow: var(--rs-shadow);
+	background: var(--panel-dark);
+	border: 1px solid var(--black);
+	box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.4), inset -1px -1px 0 rgba(255, 255, 255, 0.05);
+	padding: 0.12rem 0.5rem;
+}
+
+/* ---- shared layout --------------------------------------------------------- */
+
+.container {
+	width: min(1080px, 92vw);
+	margin-inline: auto;
+}
+
+.section {
+	margin-top: 7.5rem;
+}
+
+.reveal {
+	opacity: 0;
+	transform: translateY(22px);
+	transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.is-visible {
+	opacity: 1;
+	transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.reveal {
+		opacity: 1;
+		transform: none;
+		transition: none;
+	}
+	html {
+		scroll-behavior: auto;
+	}
+}

@@ -1,0 +1,35 @@
+# build output
+dist/
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# jetbrains setting folder
+.idea/
+
+# local tooling
+.claude/
+CLAUDE.md
+AGENTS.md
+
+# font source archive (the built site uses src/fonts/*.woff2 + *_fixed.ttf)
+/fonts/
+
+# resume source copy (the served copy lives in public/)
+/WorleyDeclanResume.pdf

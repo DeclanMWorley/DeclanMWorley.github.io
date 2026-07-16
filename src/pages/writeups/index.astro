@@ -1,0 +1,207 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { SITE } from '../../consts';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const posts = (await getCollection('writeups', ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+const dateFmt = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC',  day: 'numeric', month: 'short', year: 'numeric' });
+
+const DIFF_COLORS: Record<string, string> = {
+	Beginner: 'var(--green)',
+	Intermediate: 'var(--cyan)',
+	Advanced: 'var(--gold)',
+	Expert: 'var(--red)',
+};
+---
+
+<Base title={`Write-ups — ${SITE.name}`} description="Lab write-ups, walkthroughs, and networking notes.">
+	<main class="container">
+		<header class="log-header">
+			<p class="section-label">Writing</p>
+			<h1>Write-ups &amp; Walkthroughs</h1>
+			<p class="log-sub">
+				Labs, deep-dives, and field notes — written up as I go. Each post is rated by how much background you'll need.
+			</p>
+			<div class="diff-key">
+				{Object.entries(DIFF_COLORS).map(([name, color]) => (
+					<span class="diff-key-item"><i style={`--diff:${color}`}></i>{name}</span>
+				))}
+			</div>
+		</header>
+
+		{posts.length === 0 ? (
+			<p class="empty-note">Nothing here yet — first write-up coming soon.</p>
+		) : (
+			<div class="quest-list">
+				{posts.map((post) => (
+					<a class="rs-panel quest-row" href={`${base}/writeups/${post.id}/`}>
+						<span class="quest-diff" style={`--diff:${DIFF_COLORS[post.data.difficulty]}`} title={post.data.difficulty}></span>
+						<span class="quest-body">
+							<span class="quest-title">{post.data.title}</span>
+							<span class="quest-desc">{post.data.description}</span>
+							<span class="quest-tags">
+								{post.data.tags.map((tag) => (
+									<span class="tag">{tag}</span>
+								))}
+							</span>
+						</span>
+						<span class="quest-meta">
+							<span class="quest-cat">{post.data.category}</span>
+							<time datetime={post.data.pubDate.toISOString()}>{dateFmt.format(post.data.pubDate)}</time>
+						</span>
+					</a>
+				))}
+			</div>
+		)}
+	</main>
+
+	<style>
+		.log-header {
+			padding-block: 4.5rem 3rem;
+		}
+
+		.log-header h1 {
+			font-size: clamp(2.2rem, 5vw, 3.2rem);
+			margin: 0.6rem 0 0.8rem;
+		}
+
+		.log-sub {
+			color: var(--muted);
+			max-width: 40rem;
+		}
+
+		.diff-key {
+			display: flex;
+			gap: 1.3rem;
+			flex-wrap: wrap;
+			margin-top: 1.4rem;
+			font-size: 0.78rem;
+			font-family: var(--font-caps);
+			font-weight: 600;
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+			color: var(--muted);
+		}
+
+		.diff-key-item {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.45rem;
+		}
+
+		.diff-key-item i {
+			width: 9px;
+			height: 9px;
+			border-radius: 50%;
+			background: var(--diff);
+			box-shadow: 0 0 6px var(--diff);
+		}
+
+		.quest-list {
+			display: grid;
+			gap: 0.9rem;
+		}
+
+		.quest-row {
+			display: grid;
+			grid-template-columns: auto 1fr auto;
+			align-items: center;
+			gap: 1.2rem;
+			padding: 1.2rem 1.4rem;
+			color: inherit;
+			transition: transform 0.15s ease, box-shadow 0.15s ease;
+		}
+
+		.quest-row:hover {
+			transform: translateX(5px);
+			box-shadow:
+				inset 0 0 0 1px var(--gold),
+				inset 0 0 0 3px var(--bevel-shadow),
+				inset 0 0 40px rgba(0, 0, 0, 0.35),
+				0 10px 30px rgba(0, 0, 0, 0.5);
+		}
+
+		.quest-diff {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background: var(--diff);
+			box-shadow: 0 0 8px var(--diff);
+		}
+
+		.quest-body {
+			min-width: 0;
+		}
+
+		.quest-title {
+			display: block;
+			font-family: var(--font-display);
+			font-size: 1.3rem;
+			color: var(--orange);
+			transition: color 0.15s ease;
+		}
+
+		.quest-row:hover .quest-title {
+			color: var(--yellow);
+		}
+
+		.quest-desc {
+			display: block;
+			font-size: 0.92rem;
+			color: var(--muted);
+			margin-top: 0.15rem;
+		}
+
+		.quest-tags {
+			display: flex;
+			gap: 0.45rem;
+			flex-wrap: wrap;
+			margin-top: 0.55rem;
+		}
+
+		.tag {
+			font-family: var(--font-mono);
+			font-size: 0.68rem;
+			color: var(--gold);
+			background: rgba(232, 181, 60, 0.08);
+			border: 1px solid rgba(232, 181, 60, 0.3);
+			padding: 0.12rem 0.5rem;
+			border-radius: 2px;
+		}
+
+		.quest-meta {
+			text-align: right;
+			font-size: 0.82rem;
+			color: var(--faint);
+			display: grid;
+			gap: 0.15rem;
+			align-self: start;
+			padding-top: 0.3rem;
+		}
+
+		.quest-cat {
+			font-family: var(--font-caps);
+			font-weight: 600;
+			font-size: 0.68rem;
+			letter-spacing: 0.14em;
+			text-transform: uppercase;
+			color: var(--muted);
+		}
+
+		.empty-note {
+			color: var(--muted);
+			font-style: italic;
+		}
+
+		@media (max-width: 520px) {
+			.quest-meta {
+				display: none;
+			}
+		}
+	</style>
+</Base>
